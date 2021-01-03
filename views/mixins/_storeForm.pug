@@ -1,0 +1,22 @@
+mixin storeForm(store = {})
+  form(action=`/add/${store._id || ""}` method="POST" class="card")
+    label(for="name") Name
+    input(type="text" name="name" value=store.name)
+    label(for="description") Description
+    textArea(name="description")= store.description
+    label(for="address") Address
+    input(type="text" id="address" name="location[address]" value=(store.location && store.location.address))
+    // location[address] is nested data for store model (comes out as location.address)
+    // this is possible through: app.use(bodyParser.urlencoded({ extended: true })); in app.js ln28
+    label(for="lng") Address Longitude
+    input(type="text" id="lng" name="location[coordinates][0]")
+    label(for="lat") Address Latitude
+    input(type="text" id="lat" name="location[coordinates][1]")
+    - const choices = ["WiFi", "Open Late", "Family friendly", "Vegetarian", "Vegan", "Nice"]
+    - const tags = store.tags || []
+    ul.tags
+      each choice in choices
+        .tag.tag__choice
+          input(type="checkbox" id=choice value=choice name="tags" checked=(tags.includes(choice)))
+          label(for=choice) #{choice}
+    input(type="submit" value="Save ->" class="button")
