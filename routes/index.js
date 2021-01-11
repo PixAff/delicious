@@ -44,5 +44,15 @@ router.post(
 router.get("/account", authController.isLoogedIn, userController.account);
 router.post("/account", catchErrors(userController.updateAccount));
 router.post("/account/forgot", catchErrors(authController.forgot));
+router.get("/account/reset/:token", catchErrors(authController.resetPassword));
+router.post(
+  "/account/reset/:token",
+  authController.confirmedPassword,
+  catchErrors(authController.update)
+);
+
+// API //
+
+router.get("/api/v1/search", catchErrors(storeController.searchStores));
 
 module.exports = router;

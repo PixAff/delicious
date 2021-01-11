@@ -42,12 +42,13 @@ exports.resize = async (req, res, next) => {
 };
 
 exports.createStore = async (req, res) => {
+  req.body.author = req.user._id;
   const store = await new Store(req.body).save();
   req.flash(
     "success",
     `Successfully created ${store.name}. Care to leave a review?`
   );
-  res.redirect(`/store/${store.slug}`);
+  res.redirect(`/stores/${store.slug}`);
 };
 
 exports.getStores = async (req, res) => {
@@ -61,8 +62,15 @@ exports.getStore = async (req, res, next) => {
   res.render("store", { title: store.name, store });
 };
 
+const confirmOwner = (store, user) => {
+  if (!store.author.equals(user._id)) {
+    throw Error("this ain`t ya store!");
+  }
+};
+
 exports.editStore = async (req, res) => {
   const store = await Store.findOne({ _id: req.params.id });
+  confirmOwner(store, req.user);
   res.render("editStore", { title: `Edit ${store.name}`, store });
 };
 
@@ -89,4 +97,16 @@ exports.getStoresByTag = async (req, res) => {
   const [tags, stores] = await Promise.all([tagsPromise, storesPromise]);
 
   res.render("tags", { tag, tags, stores, title: "Tags" });
+};
+
+exports.searchStores = async (req, res) => {
+  const stores = await Store.find(
+    {
+      $text: {
+        $search: req.query.q,
+      },
+    },
+    { score: { $meta: "textScore" } }
+  ).sort({ score: { $meta: "textScore" } });
+  res.json(stores);
 };
