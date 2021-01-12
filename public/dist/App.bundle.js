@@ -999,6 +999,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 var axios = __webpack_require__(13);
 
+function searchResultsHTML(stores) {
+  return stores.map(function (store) {
+    return "<a href=\"/stores/" + store.slug + "\" class=\"search__result\">\n      <strong>" + store.name + "</strong></a> ";
+  }).join("");
+}
+
 function typeAhead(search) {
   if (!search) return;
   var searchInput = search.querySelector("input[name='search']");
@@ -1011,7 +1017,7 @@ function typeAhead(search) {
     searchResults.style.display = "block";
     axios.get("/api/v1/search?q=" + this.value).then(function (res) {
       if (res.data.length) {
-        console.log(res.data);
+        searchResults.innerHTML = searchResultsHTML(res.data);
       }
     });
   });
