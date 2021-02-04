@@ -30,6 +30,12 @@ router.get("/stores/:slug", catchErrors(storeController.getStore));
 router.get("/tags", catchErrors(storeController.getStoresByTag));
 router.get("/tags/:tag", catchErrors(storeController.getStoresByTag));
 
+router.get(
+  "/hearts",
+  authController.isLoogedIn,
+  catchErrors(storeController.getHeartedStores)
+);
+
 router.get("/login", userController.loginForm);
 router.post("/login", authController.login);
 router.get("/logout", authController.logout);
