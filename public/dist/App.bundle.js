@@ -1035,6 +1035,7 @@ function loadPlaces(map) {
     }
 
     var bounds = new google.maps.LatLngBounds();
+    var infoWindow = new google.maps.InfoWindow();
 
     var markers = places.map(function (place) {
       var _place$location$coord = _slicedToArray(place.location.coordinates, 2),
@@ -1045,9 +1046,16 @@ function loadPlaces(map) {
       bounds.extend(position);
       var marker = new google.maps.Marker({ map: map, position: position });
       marker.place = place;
-      console.log(marker);
       return marker;
     });
+
+    markers.forEach(function (marker) {
+      return marker.addListener("click", function () {
+        infoWindow.setContent(this.place.name);
+        infoWindow.open(map, this);
+      });
+    });
+
     map.setCenter(bounds.getCenter());
     map.fitBounds(bounds);
   });
@@ -1059,7 +1067,10 @@ function makeMap(mapDiv) {
   loadPlaces(map);
   var input = (0, _bling.$)("[name='geolocate']");
   var autocomplete = new google.maps.places.Autocomplete(input);
-  console.log(input);
+  autocomplete.addListener("place_changed", function () {
+    var place = autocomplete.getPlace();
+    loadPlaces(map, place.geometry.location.lat(), place.geometry.location.lng());
+  });
 }
 
 exports.default = makeMap;
@@ -2954,6 +2965,10 @@ var _map = __webpack_require__(12);
 
 var _map2 = _interopRequireDefault(_map);
 
+var _heart = __webpack_require__(36);
+
+var _heart2 = _interopRequireDefault(_heart);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 (0, _autoComplete2.default)((0, _bling.$)("#address"), (0, _bling.$)("#lat"), (0, _bling.$)("#lng"));
@@ -2961,6 +2976,48 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 (0, _typeAhead2.default)((0, _bling.$)(".search"));
 
 (0, _map2.default)((0, _bling.$)("#map"));
+
+var heartForms = (0, _bling.$$)("form.heart");
+heartForms.on("submit", _heart2.default);
+
+/***/ }),
+/* 35 */,
+/* 36 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _axios = __webpack_require__(2);
+
+var _axios2 = _interopRequireDefault(_axios);
+
+var _bling = __webpack_require__(1);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function ajaxHeart(e) {
+  var _this = this;
+
+  e.preventDefault();
+  console.log("💝");
+  _axios2.default.post(this.action).then(function (res) {
+    var isHearted = _this.heart.classList.toggle("heart__button--hearted");
+    (0, _bling.$)(".heart-count").textContent = res.data.hearts.length;
+    if (isHearted) {
+      _this.heart.classList.add("heart__button--float");
+      setTimeout(function () {
+        return _this.heart.classList.remove("heart__button--float");
+      }, 2500);
+    }
+  }).catch(console.error);
+}
+
+exports.default = ajaxHeart;
 
 /***/ })
 /******/ ]);
