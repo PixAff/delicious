@@ -77,6 +77,45 @@ storeSchema.statics.getTagsList = function () {
   ]);
 };
 
+storeSchema.statics.getTopStores = function () {
+  return this.aggregate([
+    // lookup stores and populate their reviews
+    {
+      $lookup: {
+        from: "reviews",
+        localField: "_id",
+        foreignField: "store",
+        as: "reviews",
+      },
+    },
+    // filter for only stores with at least 2 reviews
+    { $match: { "reviews.1": { $exists: true } } },
+    // add average field
+    {
+      $project: {
+        averageRating: { $avg: "$reviews.rating" },
+        // project removes all other fields - we need to add them back in
+        photo: "$$ROOT.photo",
+        name: "$$ROOT.name",
+        reviews: "$$ROOT.reviews",
+        slug: "$$ROOT.slug",
+      },
+    },
+    // sort by new field "averageRating"
+    { $sort: { averageRating: -1 } },
+    // limit to 10
+    { $limit: 10 },
+  ]);
+};
+
+function autoPopulate(next) {
+  this.populate("reviews");
+  next();
+}
+
+storeSchema.pre("find", autoPopulate);
+storeSchema.pre("findOne", autoPopulate);
+
 // find reviews where the store _id === reviews store property:
 storeSchema.virtual("reviews", {
   ref: "Review", // what model to link

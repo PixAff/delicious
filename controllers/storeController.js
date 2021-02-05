@@ -54,13 +54,29 @@ exports.createStore = async (req, res) => {
 };
 
 exports.getStores = async (req, res) => {
-  const stores = await Store.find();
-  res.render("stores", { title: "Stores", stores });
+  const page = req.params.page || 1;
+  const limit = 4;
+  const skip = page * limit - limit;
+
+  const storesPromise = Store.find()
+    .skip(skip)
+    .limit(limit)
+    .sort({ created: "desc" });
+
+  const countPromise = Store.count();
+
+  const [stores, count] = await Promise.all([storesPromise, countPromise]);
+  const pages = Math.ceil(count / limit);
+  if (!stores.length && skip) {
+    res.redirect(`/stores/page/${pages}`);
+    return;
+  }
+  res.render("stores", { title: "Stores", stores, page, pages, count });
 };
 
 exports.getStore = async (req, res, next) => {
   const store = await Store.findOne({ slug: req.params.slug }).populate(
-    "author reviews"
+    "author"
   );
   if (!store) return next();
   res.render("store", { title: store.name, store });
@@ -152,4 +168,9 @@ exports.heartStore = async (req, res) => {
 exports.getHeartedStores = async (req, res) => {
   const heartedStores = await Store.find({ _id: req.user.hearts });
   res.render("hearts", { heartedStores, title: "My favourites" });
+};
+
+exports.getTopStores = async (req, res) => {
+  const topStores = await Store.getTopStores();
+  res.render("topStores", { topStores, title: "Top 10 Stores" });
 };
